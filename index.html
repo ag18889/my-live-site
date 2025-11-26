@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>交易所资产总览生成器 V17.0</title>
+    <base href="https://ag18889.github.io/my-live-site/"> 
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+    <style>
+        /* 颜色定义 */
+        :root {
+            --text-color: #333;
+            --light-gray: #f0f2f5;
+            --binance-yellow: #fcd535;
+            --green: #00b97b;
+            --red: #f6465d;
+            --dark-bg: #2c2c2c;
+            --soft-black: #1a1a1a;
+        }
+        /* 1. 整体布局：左右分栏 */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: var(--light-gray);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            padding: 20px;
+        }
+
+        #container {
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+        }
+
+        /* 2. 模拟 App 界面 (截图区域) */
+        #mock-app {
+            width: 375px; 
+            height: 812px; 
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            background-color: #ffffff; 
+            color: var(--text-color); 
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            border: 8px solid var(--soft-black); 
+            transition: all 0.3s;
+            border-radius: 40px; 
+        }
+
+        /* 手机样式切换 CSS */
+        .standard-bar { border-radius: 12px !important; border-width: 0px !important; }
+        .standard-bar .top-bar { padding: 10px 15px !important; }
+        .standard-bar .notch { display: none !important; }
+
+        .top-bar { position: relative; z-index: 5; display: flex; justify-content: space-between; align-items: center; padding: 12px 20px 8px 20px; font-size: 15px; font-weight: 600; color: var(--text-color); background: #ffffff; }
+        .top-bar-right { display: flex; gap: 5px; align-items: center; font-size: 13px; }
+        .notch { width: 100px; height: 25px; background: black; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px; position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 6; transition: all 0.3s; }
+        .no-notch { height: 0; visibility: hidden; }
+
+        /* 核心内容区 */
+        .content-main { flex-grow: 1; padding: 15px 15px; background-color: #ffffff; overflow-y: auto; }
+        .main-nav { display: flex; gap: 20px; font-size: 18px; font-weight: 700; padding-bottom: 20px; }
+        .main-nav-item { color: #999; cursor: pointer; font-weight: 600;}
+        .main-nav-item.active { color: var(--soft-black); font-weight: 700; position: relative; }
+        .main-nav-item.active::after { content: ''; position: absolute; left: 0; bottom: -5px; width: 100%; height: 3px; background-color: var(--binance-yellow); border-radius: 2px; }
+
+        /* 资产信息区 */
+        .asset-summary h3 { font-size: 14px; font-weight: 500; color: #999; margin: 0 0 5px 0; display: flex; align-items: center; gap: 5px; }
+        .asset-summary h1 { font-size: 32px; font-weight: 700; margin: 0 0 5px 0; }
+        
+        /* 盈亏样式调整 */
+        .profit-loss-summary {
+            font-size: 15px;
+            color: var(--text-color); 
+            gap: 5px;
+            margin-top: 5px;
+            font-weight: 500;
+        }
+        .pl-value {
+            font-weight: 500;
+        }
+        .pl-value.green {
+            color: var(--green);
+        }
+        .pl-value.red {
+            color: var(--red);
+        }
+
+
+        /* 操作按钮组 CSS */
+        .action-buttons { display: flex; gap: 10px; margin-bottom: 40px; }
+        .action-btn { padding: 10px 15px; border-radius: 5px; font-size: 15px; font-weight: 600; text-align: center; }
+        .action-btn:nth-child(1) { background-color: var(--binance-yellow); color: var(--soft-black); width: 35%; }
+        .action-btn.secondary { background-color: var(--light-gray); color: var(--soft-black); width: 32.5%; }
+
+        /* 资产列表区 */
+        .asset-list-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f2f5; font-size: 15px; font-weight: 600; margin-bottom: 10px; }
+        .asset-list-item { display: flex; justify-content: space-between; padding: 10px 0; font-size: 16px; border-bottom: 1px solid #f0f2f5; }
+        .asset-list-label { color: var(--text-color); }
+        .asset-list-value { font-weight: 600; color: var(--text-color); }
+
+        /* 底部导航栏 */
+        .nav-bar { display: flex; justify-content: space-around; padding: 8px 0; border-top: 1px solid #eee; background: #ffffff; width: 100%; height: 60px; }
+        .nav-item.active { color: var(--soft-black); font-weight: 600; }
+        .nav-item.active .nav-icon { color: var(--binance-yellow); }
+
+        /* 3. 编辑区域 */
+        #editor { padding: 25px; background-color: var(--dark-bg); border-radius: 8px; color: #ccc; width: 350px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); }
+        #editor input, #editor select { width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 4px; border: 1px solid #555; background-color: #444; color: white; box-sizing: border-box; }
+        #editor input[readonly] { background-color: #555; cursor: not-allowed; }
+        #editor label { display: block; margin-bottom: 5px; font-size: 14px; color: #999; }
+        #save-button { width: 100%; padding: 12px; background-color: var(--binance-yellow); color: var(--soft-black); border: none; border-radius: 4px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 16px; }
+        #calculated-result { padding: 10px; background-color: #1a1a1a; border-radius: 4px; margin-bottom: 15px; font-size: 14px; }
+        #calculated-result .error { color: var(--red); font-weight: bold; }
+        #calculated-result .warning { color: var(--binance-yellow); font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+    <div id="container">
+        <div id="editor">
+            <h3>📱 手机样式</h3>
+            <label for="select-phone-style">手机样式</label>
+            <select id="select-phone-style">
+                <option value="notch">苹果刘海屏 (iPhone)</option>
+                <option value="standard-bar" selected>标准圆角 (Android)</option>
+            </select>
+            
+            <label for="input-custom-time">自定义时间 (如 15:58)</label>
+            <input type="text" id="input-custom-time" value="15:58">
+            
+            <hr style="border-color: #555; margin: 20px 0;">
+
+            <h3>💰 资产数据编辑</h3>
+            <label for="input-total-asset">预估总资产 ($)</label>
+            <input type="text" id="input-total-asset" value="2250870.69">
+
+            <label for="input-pl-amount">今日盈亏金额 ($)</label>
+            <input type="text" id="input-pl-amount" value="115780.017">
+
+            <label for="select-pl-color">今日盈亏状态</label>
+            <select id="select-pl-color">
+                <option value="green">盈利 (绿)</option>
+                <option value="red">亏损 (红)</option>
+            </select>
+
+            <label for="input-spot">现货余额 ($)</label>
+            <input type="text" id="input-spot" value="893718.69">
+            
+            <label for="input-funding">资金余额 ($)</label>
+            <input type="text" id="input-funding" value="1298810.05">
+
+            <div id="calculated-result">合约余额 (自动计算): <span>$58,341.95</span></div>
+            
+            <label for="input-future">合约余额 ($) - 自动计算</label>
+            <input type="text" id="input-future" value="58341.95" readonly>
+
+
+            <hr style="border-color: #555; margin: 20px 0;">
+            <button id="save-button">一键保存为 PNG 图片</button>
+        </div>
+
+        <div id="mock-app">
+            <div id="phone-notch" class="notch"></div> 
+            
+            <div class="top-bar">
+                <span id="current-time">15:58</span>
+                <span style="font-size: 18px; margin-left: 5px;"><i class="fas fa-user-alt"></i></span> 
+                <div class="top-bar-right">
+                    <i class="fas fa-signal"></i>
+                    <i class="fas fa-wifi"></i>
+                    <span style="font-size: 12px; font-weight: 600;">100</span><i class="fas fa-battery-full"></i>
+                </div>
+            </div>
+
+            <div class="content-main">
+                <div class="main-nav">
+                    <span class="main-nav-item active">总览</span>
+                    <span class="main-nav-item">现货</span>
+                    <span class="main-nav-item">资金</span>
+                    <span class="main-nav-item">合约</span>
+                </div>
+
+                <div class="asset-summary">
+                    <h3>预估总资产 <i id="eye-icon" class="fas fa-eye"></i></h3>
+                    <h1 id="total-asset-output">$2,250,870.69</h1>
+                    <p class="profit-loss-summary" id="pl-summary-output">
+                        今日盈亏 <span id="pl-value-output" class="pl-value green">+$115,780.017 (5.14%)</span>
+                    </p>
+                </div>
+
+                <div class="action-buttons">
+                    <span class="action-btn">添加资金</span>
+                    <span class="action-btn secondary">转出</span>
+                    <span class="action-btn secondary">划转</span>
+                </div>
+
+                <div class="asset-list-header">
+                    <span>币种 账户</span>
+                    <span><i class="fas fa-lock"></i></span>
+                </div>
+
+                <div class="asset-list">
+                    <div class="asset-list-item">
+                        <span class="asset-list-label">现货</span>
+                        <span id="spot-output" class="asset-list-value">$893,718.69</span>
+                    </div>
+                    <div class="asset-list-item">
+                        <span class="asset-list-label">资金</span>
+                        <span id="funding-output" class="asset-list-value">$1,298,810.05</span>
+                    </div>
+                    <div class="asset-list-item" style="border-bottom: none;">
+                        <span class="asset-list-label">合约</span>
+                        <span id="future-output" class="asset-list-value">$58,341.95</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="nav-bar">
+                <div class="nav-item">
+                    <i class="fas fa-wallet nav-icon"></i> <span>首页</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-chart-line nav-icon"></i> <span>行情</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-exchange-alt nav-icon"></i> <span>交易</span>
+                </div>
+                <div class="nav-item">
+                    <i class="fas fa-file-contract nav-icon"></i> <span>合约</span>
+                </div>
+                <div class="nav-item active">
+                    <i class="fas fa-user nav-icon"></i> <span>资产</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const MIN_TOTAL_ASSET = 50000; 
+
+        // --- 元素引用 ---
+        const mockApp = document.getElementById('mock-app');
+        const saveButton = document.getElementById('save-button');
+        const phoneNotch = document.getElementById('phone-notch');
+        const phoneStyleSelect = document.getElementById('select-phone-style');
+        const calculatedResult = document.getElementById('calculated-result');
+        const totalAssetInput = document.getElementById('input-total-asset');
+        const plAmountInput = document.getElementById('input-pl-amount');
+        const plColorSelect = document.getElementById('select-pl-color');
+        const spotInput = document.getElementById('input-spot');
+        const fundingInput = document.getElementById('input-funding');
+        const customTimeInput = document.getElementById('input-custom-time');
+
+        // 输出
+        const timeOutput = document.getElementById('current-time');
+        const totalAssetOutput = document.getElementById('total-asset-output');
+        const plValueOutput = document.getElementById('pl-value-output'); 
+        const spotOutput = document.getElementById('spot-output');
+        const fundingOutput = document.getElementById('funding-output');
+        const futureOutput = document.getElementById('future-output');
+
+
+        // --- 工具函数：清理和格式化数字 ---
+        function cleanNumber(numStr) {
+            return parseFloat(numStr.replace(/[^0-9.]/g, '')) || 0;
+        }
+
+        function formatNumber(num) {
+            if (isNaN(num)) return '0.00';
+            return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 10 });
+        }
+
+
+        // --- 主更新函数 ---
+        function updateDisplay() {
+            // 1. 顶部时间
+            timeOutput.textContent = customTimeInput.value;
+
+            // 2. 手机样式
+            const style = phoneStyleSelect.value;
+            phoneNotch.className = style === 'notch' ? 'notch' : 'no-notch';
+            mockApp.className = style === 'standard-bar' ? 'standard-bar' : '';
+
+            // 3. 校验并获取总资产 (强制最低 $50k)
+            let totalAssetRaw = cleanNumber(totalAssetInput.value);
+            let displayTotalAsset = totalAssetRaw;
+            
+            let assetWarning = '';
+            if (totalAssetRaw < MIN_TOTAL_ASSET) {
+                assetWarning = `<span class="warning">⚠️ 警告: 总资产低于 $${formatNumber(MIN_TOTAL_ASSET)}，已强制显示 $${formatNumber(MIN_TOTAL_ASSET)}。</span>`;
+                displayTotalAsset = MIN_TOTAL_ASSET;
+            }
+            
+            // 4. 资金平衡计算
+            const spotBalance = cleanNumber(spotInput.value);
+            const fundingBalance = cleanNumber(fundingInput.value);
+
+            const futureBalance = displayTotalAsset - spotBalance - fundingBalance;
+
+            // 5. 盈亏颜色/符号/百分比
+            const plAmount = cleanNumber(plAmountInput.value);
+            const plColorClass = plColorSelect.value;
+            const plSign = plColorSelect.value === 'red' ? '-' : '+';
+
+            let plPercent = 0.00;
+            if (displayTotalAsset !== 0 && !isNaN(plAmount)) {
+                plPercent = Math.abs((plAmount / displayTotalAsset) * 100).toFixed(2);
+            }
+
+            const formattedPlAmount = formatNumber(plAmount);
+            
+            // 6. 更新 App 界面
+            
+            // 总资产
+            totalAssetOutput.textContent = `$${formatNumber(displayTotalAsset)}`;
+            
+            // 盈亏值和颜色
+            plValueOutput.textContent = `${plSign}$${formattedPlAmount} (${plSign}${plPercent}%)`;
+            plValueOutput.className = `pl-value ${plColorClass}`;
+            
+            // 现货和资金
+            spotOutput.textContent = `$${formatNumber(spotBalance)}`;
+            fundingOutput.textContent = `$${formatNumber(fundingBalance)}`;
+
+            // 合约余额 (防负数)
+            let calculationMessage = '';
+            if (futureBalance < 0) {
+                 calculationMessage = `<span class="error">❌ 错误: 现货+资金超过总资产 ($${formatNumber(Math.abs(futureBalance))})。请调整。</span>`;
+                 futureOutput.textContent = '$0.00'; 
+            } else {
+                 futureOutput.textContent = `$${formatNumber(futureBalance)}`;
+                 calculationMessage = `合约余额 (自动计算): <span>$${formatNumber(futureBalance)}</span>`;
+            }
+            
+            // 7. 更新控制面板
+            calculatedResult.innerHTML = assetWarning + calculationMessage;
+        }
+        
+        // --- 保存图片函数 (保持不变) ---
+        function saveScreenshot() {
+            saveButton.disabled = true;
+            saveButton.textContent = '正在生成中...';
+            
+            const originalBorder = mockApp.style.border;
+            const originalBorderRadius = mockApp.style.borderRadius;
+            const originalClassName = mockApp.className;
+
+            mockApp.style.border = 'none';
+            mockApp.style.borderRadius = '0px';
+            mockApp.className = ''; 
+
+            const navBar = document.querySelector('.nav-bar');
+            navBar.style.display = 'none'; 
+
+            html2canvas(mockApp, {
+                allowTaint: true, 
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                scale: window.devicePixelRatio,
+            }).then(canvas => {
+                const imageURL = canvas.toDataURL("image/png");
+                const link = document.createElement('a');
+                link.href = imageURL;
+                link.download = 'exchange_asset_summary_screenshot.png';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                // 恢复样式
+                mockApp.style.border = originalBorder;
+                mockApp.style.borderRadius = originalBorderRadius;
+                mockApp.className = originalClassName;
+                navBar.style.display = 'flex'; 
+
+                saveButton.disabled = false;
+                saveButton.textContent = '一键保存为 PNG 图片';
+            }).catch(err => {
+                 saveButton.disabled = false;
+                 saveButton.textContent = '生成失败，请截图';
+                 console.error("生成图片时出错:", err);
+                 // 恢复样式
+                 mockApp.style.border = originalBorder;
+                 mockApp.style.borderRadius = originalBorderRadius;
+                 mockApp.className = originalClassName;
+                 navBar.style.display = 'flex'; 
+            });
+        }
+
+        // --- 监听所有变化 ---
+        updateDisplay(); 
+        customTimeInput.addEventListener('input', updateDisplay);
+        totalAssetInput.addEventListener('input', updateDisplay);
+        plAmountInput.addEventListener('input', updateDisplay);
+        plColorSelect.addEventListener('change', updateDisplay);
+        spotInput.addEventListener('input', updateDisplay);
+        fundingInput.addEventListener('input', updateDisplay);
+        phoneStyleSelect.addEventListener('change', updateDisplay);
+        saveButton.addEventListener('click', saveScreenshot);
+
+    </script>
+</body>
+</html>
