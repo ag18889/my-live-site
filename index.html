@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <title>交易所资产总览生成器 V20.0 (终极完美版)</title>
+    <title>交易所资产总览生成器 V21.0 (终极完美复刻)</title>
     <base href="https://ag18889.github.io/my-live-site/"> 
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -12,19 +12,19 @@
     <style>
         /* 颜色定义 */
         :root {
-            --text-color: #333;
+            --text-color: #1a1a1a; /* 修正：主文字更黑 */
             --light-gray: #f0f2f5;
             --binance-yellow: #fcd535;
-            --green: #00b97b;
+            --green: #00b97b; 
             --red: #f6465d;
             --dark-bg: #2c2c2c;
-            --soft-black: #1a1a1a;
+            --soft-gray: #888; /* 弱文字颜色 */
         }
         /* 1. 整体布局：左右分栏 */
         body {
             display: flex;
             justify-content: center;
-            align-items: flex-start;
+            align-items: flex-start; 
             min-height: 100vh;
             background-color: var(--light-gray);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -58,17 +58,16 @@
         .standard-bar .top-bar { padding: 10px 15px !important; }
         .standard-bar .notch { display: none !important; }
 
+        /* 顶部状态栏 */
         .top-bar { position: relative; z-index: 5; display: flex; justify-content: space-between; align-items: center; padding: 12px 20px 8px 20px; font-size: 15px; font-weight: 600; color: var(--text-color); background: #ffffff; }
         .top-bar-right { display: flex; gap: 5px; align-items: center; font-size: 13px; }
-        .notch { width: 100px; height: 25px; background: black; border-bottom-left-radius: 10px; border-bottom-right-radius: 10px; position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 6; transition: all 0.3s; }
-        .no-notch { height: 0; visibility: hidden; }
 
         /* 核心内容区 */
-        .content-main { flex-grow: 1; padding: 0 15px; background-color: #ffffff; overflow-y: auto; } /* 移除侧边 padding */
+        .content-main { flex-grow: 1; padding: 0 15px; background-color: #ffffff; overflow-y: auto; }
         
         /* 导航区 */
-        .main-nav { display: flex; gap: 20px; font-size: 16px; font-weight: 600; padding: 10px 0 20px 10px; margin-top: 5px; } /* 修正字号/粗细 */
-        .main-nav-item { color: #999; cursor: pointer; font-weight: 600;}
+        .main-nav { display: flex; gap: 20px; font-size: 16px; font-weight: 600; padding: 15px 10px 20px 10px; margin-top: 5px; } 
+        .main-nav-item { color: #999; cursor: pointer; font-weight: 500; font-size: 16px; }
         .main-nav-item.active { color: var(--soft-black); font-weight: 700; position: relative; }
         .main-nav-item.active::after { content: ''; position: absolute; left: 0; bottom: -5px; width: 100%; height: 3px; background-color: var(--binance-yellow); border-radius: 2px; }
 
@@ -76,9 +75,14 @@
         .asset-summary { margin-bottom: 25px; padding: 0 10px; } 
         .asset-summary h3 { font-size: 14px; font-weight: 500; color: #999; margin: 0 0 5px 0; display: flex; align-items: center; gap: 5px; }
         .asset-summary h1 { font-size: 32px; font-weight: 700; margin: 0; padding: 0; display: flex; align-items: baseline; gap: 8px; }
-        .asset-summary h1 span { font-size: 16px; font-weight: 500; color: #999; } /* 修正 1: USD 符号样式 */
-        
-        /* 盈亏样式调整 */
+        .asset-summary h1 .currency-details { 
+            font-size: 16px; 
+            font-weight: 500; 
+            color: #999;
+            margin-left: 5px;
+        }
+
+        /* 盈亏样式 */
         .profit-loss-summary {
             font-size: 15px;
             color: var(--text-color); 
@@ -91,48 +95,49 @@
         .pl-value { font-weight: 500; }
         .pl-value.green { color: var(--green); }
         .pl-value.red { color: var(--red); }
-        .pl-arrow { color: #999; margin-left: 5px; } /* 修正 2: 盈亏右侧箭头样式 */
+        .pl-arrow { color: #999; margin-left: 5px; }
 
 
         /* 操作按钮组 CSS */
         .action-buttons { display: flex; gap: 10px; margin: 25px 10px 30px 10px; } 
         .action-btn { padding: 10px 15px; border-radius: 5px; font-size: 15px; font-weight: 600; text-align: center; }
-        .action-btn:nth-child(1) { background-color: var(--binance-yellow); color: var(--soft-black); width: 35%; }
-        .action-btn.secondary { background-color: var(--light-gray); color: var(--soft-black); width: 32.5%; }
+        .action-btn:nth-child(1) { background-color: var(--binance-yellow); color: var(--soft-black); width: 37%; } /* 修正 3: 更宽 */
+        .action-btn.secondary { background-color: var(--light-gray); color: var(--soft-black); width: 30%; } /* 修正 3: 略窄 */
+
 
         /* 资产列表区 */
         .asset-list-header { 
             display: flex; justify-content: space-between; align-items: center; 
             padding: 10px 10px 10px 10px; 
             border-bottom: 1px solid #f0f2f5; 
-            font-size: 15px; font-weight: 500; /* 修正 3: 列表头文字更细 */
+            font-size: 15px; font-weight: 500; 
             color: #999;
             margin-bottom: 0; 
         }
         .asset-list-item { 
             display: flex; justify-content: space-between; 
-            padding: 15px 10px; 
+            padding: 12px 10px; /* 修正 5: 精确行间距 */
             font-size: 16px; 
             border-bottom: 1px solid #f0f2f5; 
+            line-height: 1.2;
         }
-        .asset-list-label { color: var(--text-color); font-weight: 500; } /* 修正 3: 列表 label 字体更细 */
+        .asset-list-label { color: var(--text-color); font-weight: 500; } 
         .asset-list-value { font-weight: 600; color: var(--text-color); } 
-        .asset-list-value.contract-value { margin-left: 5px; } /* 合约余额没有 $ 符号，修正 5 */
+        .asset-list-value.contract-value { margin-left: 5px; font-weight: 500; } /* 修正 5: 合约金额更细 */
 
         /* 底部导航栏 */
         .nav-bar { display: flex; justify-content: space-around; padding: 8px 0; border-top: 1px solid #eee; background: #ffffff; width: 100%; height: 60px; }
         .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #999; }
-        .nav-icon { font-size: 24px; margin-bottom: 3px; line-height: 1; font-family: inherit; }
+        .nav-icon { font-size: 20px; margin-bottom: 3px; line-height: 1; font-family: inherit; } /* 修正 7: 图标变小 */
         .nav-item.active { color: var(--soft-black); font-weight: 600; }
         .nav-item.active .nav-icon { color: var(--binance-yellow); }
 
-        /* 3. 编辑区域 */
+        /* 3. 编辑区域 (保持不变) */
         #editor { padding: 25px; background-color: var(--dark-bg); border-radius: 8px; color: #ccc; width: 350px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); }
         #editor input, #editor select { width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 4px; border: 1px solid #555; background-color: #444; color: white; box-sizing: border-box; }
         #editor input[readonly] { background-color: #555; cursor: not-allowed; }
         #editor label { display: block; margin-bottom: 5px; font-size: 14px; color: #999; }
         #save-button { width: 100%; padding: 12px; background-color: var(--binance-yellow); color: var(--soft-black); border: none; border-radius: 4px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 16px; }
-        #calculated-result { padding: 10px; background-color: #1a1a1a; border-radius: 4px; margin-bottom: 15px; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -206,9 +211,7 @@
                 </div>
 
                 <div class="asset-summary">
-                    <h3>预估总资产 <i id="eye-icon" class="fas fa-eye"></i></h3>
-                    <h1 id="total-asset-output">$2,250,870.69<span> USD <i class="fas fa-chevron-down" style="font-size: 14px;"></i></span></h1>
-                    <p class="profit-loss-summary" id="pl-summary-output">
+                    <h3>预估总资产 <span id="eye-icon-sim">👁️</span></h3> <h1 id="total-asset-output">$2,250,870.69<span class="currency-details"> USD <i class="fas fa-chevron-down" style="font-size: 14px;"></i></span></h1> <p class="profit-loss-summary" id="pl-summary-output">
                         今日盈亏 <span id="pl-value-output" class="pl-value green">+$115,780.017 (5.14%)</span> <span class="pl-arrow">></span>
                     </p>
                 </div>
@@ -358,7 +361,7 @@
             }
             
             // 7. 更新控制面板和 App 合约余额 (注意：不加 $)
-            futureOutput.textContent = contractValueOutput; // 修正 5: 合约余额不带 $
+            futureOutput.textContent = contractValueOutput; 
             calculatedResult.innerHTML = assetWarning + calculationMessage;
         }
         
