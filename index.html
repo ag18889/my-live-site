@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <title>交易所资产总览生成器 V18.0 (最终细节修复)</title>
+    <title>交易所资产总览生成器 V19.0 (终极排版修复)</title>
     <base href="https://ag18889.github.io/my-live-site/"> 
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -23,7 +23,7 @@
         body {
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start; /* 调整为 flex-start，防止内容居中导致顶部留白 */
             min-height: 100vh;
             background-color: var(--light-gray);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -63,57 +63,60 @@
         .no-notch { height: 0; visibility: hidden; }
 
         /* 核心内容区 */
-        .content-main { flex-grow: 1; padding: 15px 15px; background-color: #ffffff; overflow-y: auto; }
-        .main-nav { display: flex; gap: 20px; font-size: 18px; font-weight: 700; padding-bottom: 20px; }
-        .main-nav-item { color: #999; cursor: pointer; font-weight: 600;}
+        .content-main { flex-grow: 1; padding: 0 15px; background-color: #ffffff; overflow-y: auto; } /* 移除左侧 padding */
+        
+        /* 导航区 */
+        .main-nav { display: flex; gap: 20px; font-size: 18px; font-weight: 700; padding: 10px 0 20px 10px; margin-top: 5px; }
+        .main-nav-item { color: #999; cursor: pointer; font-weight: 600; font-size: 16px; } /* 修正字号 */
         .main-nav-item.active { color: var(--soft-black); font-weight: 700; position: relative; }
         .main-nav-item.active::after { content: ''; position: absolute; left: 0; bottom: -5px; width: 100%; height: 3px; background-color: var(--binance-yellow); border-radius: 2px; }
 
         /* 资产信息区 */
+        .asset-summary { margin-bottom: 25px; padding: 0 10px; } /* 增加 padding 和 margin 调整 */
         .asset-summary h3 { font-size: 14px; font-weight: 500; color: #999; margin: 0 0 5px 0; display: flex; align-items: center; gap: 5px; }
-        .asset-summary h1 { font-size: 32px; font-weight: 700; margin: 0 0 5px 0; }
+        .asset-summary h1 { font-size: 32px; font-weight: 700; margin: 0; padding: 0; } /* 移除所有 h1 默认间距 */
         
         /* 盈亏样式调整 */
         .profit-loss-summary {
             font-size: 15px;
             color: var(--text-color); 
             gap: 5px;
-            margin-top: 5px;
+            margin-top: 5px; /* 精确间距 */
+            margin-bottom: 0;
+            padding: 0;
             font-weight: 500;
         }
-        .pl-value {
-            font-weight: 500;
-        }
-        .pl-value.green {
-            color: var(--green);
-        }
-        .pl-value.red {
-            color: var(--red);
-        }
+        .pl-value { font-weight: 500; }
+        .pl-value.green { color: var(--green); }
+        .pl-value.red { color: var(--red); }
 
 
         /* 操作按钮组 CSS */
-        .action-buttons { display: flex; gap: 10px; margin-bottom: 40px; }
+        .action-buttons { display: flex; gap: 10px; margin: 25px 10px 30px 10px; } /* 精确 margin */
         .action-btn { padding: 10px 15px; border-radius: 5px; font-size: 15px; font-weight: 600; text-align: center; }
         .action-btn:nth-child(1) { background-color: var(--binance-yellow); color: var(--soft-black); width: 35%; }
         .action-btn.secondary { background-color: var(--light-gray); color: var(--soft-black); width: 32.5%; }
 
         /* 资产列表区 */
-        .asset-list-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f2f5; font-size: 15px; font-weight: 600; margin-bottom: 10px; }
-        .asset-list-item { display: flex; justify-content: space-between; padding: 10px 0; font-size: 16px; border-bottom: 1px solid #f0f2f5; }
+        .asset-list-header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 10px 10px 10px 10px; /* 修正左右 padding */
+            border-bottom: 1px solid #f0f2f5; 
+            font-size: 15px; font-weight: 600; margin-bottom: 0; 
+        }
+        .asset-list-item { 
+            display: flex; justify-content: space-between; 
+            padding: 15px 10px; /* 增加上下间距，更宽松 */
+            font-size: 16px; 
+            border-bottom: 1px solid #f0f2f5; 
+        }
         .asset-list-label { color: var(--text-color); }
         .asset-list-value { font-weight: 600; color: var(--text-color); }
 
-        /* 底部导航栏 新样式 (使用特殊字符) */
+        /* 底部导航栏 */
         .nav-bar { display: flex; justify-content: space-around; padding: 8px 0; border-top: 1px solid #eee; background: #ffffff; width: 100%; height: 60px; }
         .nav-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #999; }
-        
-        .nav-icon {
-            font-size: 24px; /* 增大图标，使用字符更清晰 */
-            margin-bottom: 3px;
-            line-height: 1;
-            font-family: inherit; /* 确保使用标准字体渲染 Emoji */
-        }
+        .nav-icon { font-size: 24px; margin-bottom: 3px; line-height: 1; font-family: inherit; }
         .nav-item.active { color: var(--soft-black); font-weight: 600; }
         .nav-item.active .nav-icon { color: var(--binance-yellow); }
 
